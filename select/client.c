@@ -52,7 +52,8 @@ int main(int argc, char *argv[])
 
     while(1)
     {
-        send(client_fd, "hello", 5, 0);
+        int res = send(client_fd, "hello", 5, 0);
+		printf("send result is %d \n", res);
         sleep(10);
     }
     return 0;

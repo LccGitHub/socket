@@ -97,26 +97,26 @@ int main()
                 if (client[i] < 0) 
                 {
                     client[i] = conn;
+					if (i > maxi)
+						maxi = i;
+					break;
                 }
-                if (i > maxi)
-                    maxi = i;
-                break;
             }
-            if (i == FD_SETSIZE) 
-            {
-                printf("too many clients \n");
+			if (i == FD_SETSIZE) 
+			{
+				printf("too many clients \n");
                 exit(-1);
-            }
+			}
 
-            printf("receiv connect ip = %s, port = %d\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
+			printf("receiv connect ip = %s, port = %d, maxi=%d, conn = %d\n", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port), maxi, conn);
 
-            FD_SET(conn, &allset);
-            if (conn > maxfd) 
-                maxfd = conn;
+			FD_SET(conn, &allset);
+			if (conn > maxfd) 
+				maxfd = conn;
 
-            if (--nready < 0)
+			if (--nready <= 0)
                 continue;
-        }
+		}
 
         for (i = 0; i <= maxi; i++) 
         {
@@ -129,7 +129,7 @@ int main()
                 int ret = read(conn, recvbuf, 1024);
                 if (ret == -1) 
                 {
-                    ERR_EXIT("readline error:");
+                    perror("readline error:");
                 }
                 else if (ret == 0) 
                 {
