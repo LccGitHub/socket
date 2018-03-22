@@ -37,7 +37,10 @@ int main(int argc, char** argv)
 	while(1) {
 		char buffer[BUFFER_1K];
 		memset(buffer, 0, sizeof(buffer));
-		write(client_fd, "12345678", 20);
+		int res = write(client_fd, "hello", strlen("hello"));
+		printf("write res = %d \n", res);
+		printf("wait for receive ...");
+#if 1
 		int length = read(client_fd, buffer, sizeof(buffer));
 		if (length <= 0) {
 			perror("read failed:");
@@ -45,6 +48,7 @@ int main(int argc, char** argv)
 			exit(1);
 		}
 		printf("read buf:%s\n", buffer);
+#endif
 	}
 	close(client_fd);
 	return 0;

@@ -8,6 +8,7 @@
 #include<arpa/inet.h>
 #include<unistd.h>
 #include<sys/epoll.h>
+#include<signal.h>
 
 
 #define MAX_FD 100
@@ -24,6 +25,7 @@ void on_recv(int sock);
 
 int main(int argc, char** argv)
 {
+	signal(SIGPIPE, SIG_IGN);
 	int server_fd = socket(PF_INET, SOCK_STREAM, 0);
 	if (server_fd < 0) {
 		perror("socket failed:");
@@ -62,7 +64,7 @@ int main(int argc, char** argv)
 	}
 
 	struct epoll_event event;
-	event.events = EPOLLIN | EPOLLET;
+	event.events = EPOLLIN | EPOLLET | EPOLLOUT;
 	event.data.fd = server_fd;
 
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &event) < 0) { //registered monitoring events
@@ -99,24 +101,47 @@ int main(int argc, char** argv)
 				{
 					onAccept(server_fd);
 				}
-				else {
+				else if (events[i].events & EPOLLIN){
 					//onRecv(events[i].data.fd);
 					int read_fd = events[i].data.fd;
 					if (read_fd < 0) {
 						continue;
 					}
-					int len = read(read_fd, recv_buf, sizeof(recv_buf));
-					if (len <= 0) {
+					int n = 0;
+					int len;
+					len = read(read_fd, recv_buf, sizeof(recv_buf));
+					if (len  < 0) {
 						perror("read failed:");
-						close(read_fd);
-						events[i].data.fd = -1;
+						if (errno == ECONNRESET) {
+							close(read_fd);
+							events[i].data.fd = -1;
+						}
+						else {
+							printf("read erro \n");
+						}
+					}
+					else if (len == 0) {
+							close(read_fd);
+							events[i].data.fd = -1;
 					}
 					else {
-						printf("read:%s\n", recv_buf);
+						recv_buf[len] = 0;
+						printf("read:%s, len =%d\n", recv_buf, len);
+						memset(recv_buf, 0, sizeof(recv_buf));
+						write(read_fd, "OK", strlen("OK"));
 						event.data.fd = read_fd;
 						event.events = EPOLLOUT | EPOLLET;
-						epoll_ctl(epoll_fd, EPOLL_CTL_ADD, read_fd, &event);
+						//epoll_ctl(epoll_fd, EPOLL_CTL_ADD, read_fd, &event);
 					}
+				}
+				else if (events[i].events & EPOLLOUT){
+					printf("write event!!! \n");
+					int write_fd = events[i].data.fd;
+					write(write_fd, "OK", 3);
+					
+					event.data.fd = write_fd;
+					event.events = EPOLLOUT | EPOLLET;
+					epoll_ctl(epoll_fd, EPOLL_CTL_ADD, write_fd, &event);
 				}
 			}
 		}
