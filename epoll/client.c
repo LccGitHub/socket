@@ -39,13 +39,14 @@ int main(int argc, char** argv)
 		memset(buffer, 0, sizeof(buffer));
 		write(client_fd, "12345678", 20);
 		int length = read(client_fd, buffer, sizeof(buffer));
-		if (length < 0) {
+		if (length <= 0) {
 			perror("read failed:");
 			close(client_fd);
 			exit(1);
 		}
 		printf("read buf:%s\n", buffer);
 	}
+	close(client_fd);
 	return 0;
 }
 
