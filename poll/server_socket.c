@@ -57,8 +57,18 @@ int main()
 					else if (res == 0) {
 						printf("this client[%d] have close\n", poll_set[index].fd);
 						close(poll_set[index].fd);
+#if 0
 						poll_set[index].events = 0;
 						poll_set[index].fd = -1;
+#endif
+						int i = 0;
+#if 1
+						for(i = index; i< numfds-1; i++) {
+							//poll_set[index] = poll_set[index+1];
+							memcpy(&poll_set[index], &poll_set[index+1], sizeof(poll_set));
+						}
+						numfds--;
+#endif
 					}
 					else {
 						perror("read error:");
