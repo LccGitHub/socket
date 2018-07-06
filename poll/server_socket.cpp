@@ -5,10 +5,13 @@
 #include<poll.h>
 #include<netinet/in.h>
 #include<string.h>
+#include<string>
 #include<vector>
 #include<unistd.h>
 #include<pthread.h>
 #include<fcntl.h>
+#include<json/json.h>
+#include<cstring>
 #define POLL_SIZE 32
 
 class ClientInfo
@@ -29,6 +32,42 @@ class ClientInfo
 		{
 			printf("receive fd[%d], data[%s]\n", mFd, data);
 			/*TO DO==> to match data to do action*/
+			std::string buffer(data);
+			Json::Reader reader;
+			Json::Value root;
+			if (reader.parse(buffer, root)) {
+				int jsonCnt = root.size();
+				printf("json cnt =%d\n", jsonCnt);
+					if(!root["ALLDoor"].isNull()){
+						std::string out= root["ALLDoor"].asString();
+						printf("ALLDoor[%s]\n", out.c_str());
+					}
+					if (!root.parse("IMEI")){
+						std::string out= root["IMEI"].asString();
+						printf("IMEI[%s]\n", out.c_str());
+					}
+			}
+#if 0
+			json_object* jsonObj = json_tokener_parse(data);
+			if (jsonObj != NULL) {
+				json_object_object_foreach(jsonObj, key, value) {
+					const char* valStr = json_object_to_json_string(value);
+					if (strncmp(key, "ALLDoor", sizeof("ALLDoor")) == 0) {
+						printf("ALLDoor[%s]\n", valStr);
+					}
+					else if (strncmp(key, "IMEI", sizeof("IMEI")) == 0){
+						printf("IMEI[%s]\n", valStr);
+					}
+					else {
+						printf("cant not match \n");
+					}
+				}
+				json_object_put(jsonObj);
+			}
+			else {
+				printf("json_tokener_parse failed \n");
+			}
+#endif
 		}
 		void clearClientInfo()
 		{
@@ -124,7 +163,7 @@ class Server
 		void setnonblocking(int fd)
 		{
 			int old_option = fcntl(fd, F_GETFL);
-		    int new_option = old_option | O_NONBLOCK;
+			int new_option = old_option | O_NONBLOCK;
 			fcntl(fd, F_SETFL, new_option);
 		}
 		int createSocket()
