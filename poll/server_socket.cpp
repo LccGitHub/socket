@@ -42,7 +42,7 @@ class ClientInfo
 						std::string out= root["ALLDoor"].asString();
 						printf("ALLDoor[%s]\n", out.c_str());
 					}
-					if (!root.parse("IMEI")){
+					if (!root["IMEI"].isNull()){
 						std::string out= root["IMEI"].asString();
 						printf("IMEI[%s]\n", out.c_str());
 					}
