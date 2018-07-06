@@ -8,6 +8,7 @@
 #include<vector>
 #include<unistd.h>
 #include<pthread.h>
+#include<fcntl.h>
 #define POLL_SIZE 32
 
 class ClientInfo
@@ -21,6 +22,7 @@ class ClientInfo
 		}
 		~ClientInfo()
 		{
+			close(mFd);
 			printf("destory ClientInfo[%d] \n", mFd);
 		}
 		void matchReadData(char* data)
@@ -119,6 +121,12 @@ class Server
 			closeServer();
 			printf("destory Server \n");
 		}
+		void setnonblocking(int fd)
+		{
+			int old_option = fcntl(fd, F_GETFL);
+		    int new_option = old_option | O_NONBLOCK;
+			fcntl(fd, F_SETFL, new_option);
+		}
 		int createSocket()
 		{
 			int result = 0;
@@ -138,6 +146,7 @@ class Server
 			}
 			int opt = 1;
 			setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
+			setnonblocking(server_fd);
 			mServerFd = server_fd;
 			return result;
 
@@ -167,6 +176,7 @@ class Server
 							numfds++;
 							ClientInfo* client = new ClientInfo(client_fd);
 							addClientInfo(client);
+							index++;/*for break for loop and retry poll*/
 							printf("add Client on fd %d\n", client_fd);
 						}
 						else {
@@ -183,18 +193,13 @@ class Server
 								printf("this client[%d] have close\n", mPollSet[index].fd);
 								close(mPollSet[index].fd);
 								removeClientInfoByFd(mPollSet[index].fd);
-#if 0
-								mPollSet[index].events = 0;
-								mPollSet[index].fd = -1;
-#endif
 								int i = 0;
-#if 1
 								for(i = index; i< numfds-1; i++) {
 									//mPollSet[index] = mPollSet[index+1];
 									memcpy(&mPollSet[index], &mPollSet[index+1], sizeof(mPollSet));
 								}
 								numfds--;
-#endif
+								index--;/*reason: array have offset one positon forward*/
 							}
 							else {
 								perror("read error:");
@@ -205,7 +210,7 @@ class Server
 				}
 			}
 		}
-		void closetServer()
+		void closeServer()
 		{
 			close(mServerFd);
 		}
