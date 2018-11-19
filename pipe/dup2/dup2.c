@@ -42,7 +42,7 @@ main()
          {
 	     printf("Parent: %s\n", inbuf);
 	 }
-         wait(NULL);
+         wait(NULL);// may be can replace by exit(2);
          break;
    default:   /* parent reads pipe */
          close(p[0]);  /* first close the read end of the pipe */
