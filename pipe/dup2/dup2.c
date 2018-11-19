@@ -9,7 +9,7 @@
 
 #define MSGSIZE 64
 
-char *msg1 = "hello-#1";
+char *msg1 = "hello #1";
 char *msg2 = "hello #2";
 char *msg3 = "hello #3";
 
@@ -30,10 +30,6 @@ main()
    case -1: perror("error: fork call");
             exit(2);
    case 0:  /* if child then write down pipe */
-         close(p[0]);  /* first close the read end of the pipe */
-         write(p[1], msg1, strlen(msg1) +1);
-         break;
-   default:   /* parent reads pipe */
          close(p[1]);  /* first close the write end of the pipe */
          if(dup2(p[0], 0 ) == -1 ) /* stdin == read end of the pipe */
          {
@@ -47,6 +43,10 @@ main()
 	     printf("Parent: %s\n", inbuf);
 	 }
          wait(NULL);
+         break;
+   default:   /* parent reads pipe */
+         close(p[0]);  /* first close the read end of the pipe */
+         write(p[1], msg1, strlen(msg1) +1);
          break;
    }
 
