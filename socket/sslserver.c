@@ -68,9 +68,7 @@ int main(int argc, char **argv)
 	const SSL_METHOD *meth;
 
 	SSL_load_error_strings();  // readable error message 
-	SSLeay_add_ssl_algorithms();
-	// OpenSSL_add_ssl_algorithms() and SSLeay_add_ssl_algorithms() are synonyms for SSL_library_init().
-	//SSL_library_init(); // need call befor any action
+	SSL_library_init();
 	//meth = TLS_serverserver_method();
 	meth = TLSv1_2_server_method();
 	ctx = SSL_CTX_new(meth);
