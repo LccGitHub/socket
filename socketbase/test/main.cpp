@@ -5,6 +5,8 @@
 #include "TcpServer.h"
 #include "TcpClient.h"
 
+#include "UnixSocketServer.h"
+#include "UnixSocketClient.h"
 
 int main(int argc, char* argv[])
 {
@@ -14,6 +16,7 @@ int main(int argc, char* argv[])
     else {
         int isServer = atoi(argv[1]);
         SocketBase* sockePtr= NULL;
+#ifdef TEST_TCP
         if (isServer) {
             sockePtr = new  TcpServer("127.0.0.1", 8888);
             
@@ -21,6 +24,15 @@ int main(int argc, char* argv[])
         else {
             sockePtr = new  TcpClient("127.0.0.1", 8888);
         }
+#else
+        if (isServer) {
+            sockePtr = new  UnixSocketServer("test", 8888);
+            
+        }
+        else {
+            sockePtr = new  UnixSocketClient("test", 8888);
+        }
+#endif
 
         if (sockePtr) {
             sockePtr->start();
